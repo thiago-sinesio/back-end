@@ -301,7 +301,7 @@ GET /api/files/{fileId}
 
 ---
 
-## 4. Fluxo de Mensagens
+## 4. Fluxo de Mensagens (com Resposta Mock do Assistente)
 
 ```
 [Cliente] → POST /api/messages
@@ -310,10 +310,12 @@ GET /api/files/{fileId}
                ↓ (valida DTO)
          [MessageService]
                ↓ (regras de negócio)
-         1. Verifica/reicria sessão (SessionService)
-         2. Salva mensagem no banco (MessageRepository)
-         3. Atualiza updatedAt da sessão (SessionRepository)
-         4. Retorna MessageResponse
+         1. Verifica/recria sessão (SessionService)
+         2. Salva mensagem do USER no banco (MessageRepository)
+         3. Gera resposta mock do ASSISTANT (ver regras abaixo)
+         4. Salva mensagem do ASSISTANT no banco (MessageRepository)
+         5. Atualiza updatedAt da sessão (SessionRepository)
+         6. Retorna AMBAS as mensagens (USER + ASSISTANT) na resposta
                ↓
          [MessageController]
                ↓ (HTTP 201)
@@ -321,8 +323,40 @@ GET /api/files/{fileId}
 ```
 
 **Regras de negócio (MessageService):**
-- Ao receber uma mensagem com `role = USER`, a service **pode** disparar uma resposta automática do assistente (se houver integração com IA) ou apenas persistir.
+- Ao receber uma mensagem com `role = USER`, a service **deve obrigatoriamente** gerar uma resposta automática do assistente (mock) na mesma requisição síncrona.
+- **Comportamento mock (Etapa 1 — respostas controladas de teste):**
+  - A resposta do assistente é gerada por um método `generateMockResponse(String userMessage)` dentro do `MessageService`.
+  - O mock retorna respostas pré-definidas baseadas em palavras-chave simples. Exemplo:
+    - Entrada contendo "olá" ou "oi" → `"Olá! Sou o assistente virtual. Como posso ajudar?"`
+    - Entrada contendo "ajuda" → `"Posso te ajudar com informações gerais. Envie sua pergunta ou anexe um documento PDF/TXT para análise."`
+    - Entrada contendo "arquivo" ou "documento" → `"Para enviar um documento, use a área de arrastar-e-soltar ou o botão de upload. Aceito arquivos PDF e TXT de até 10MB."`
+    - Qualquer outra entrada → `"Recebi sua mensagem: '<trecho da mensagem>'. Em breve serei integrado a um modelo de IA para respostas mais inteligentes!"`
+  - A lógica mock é isolada e facilmente substituível por uma integração real com modelo de IA em etapas futuras.
 - O histórico completo de uma sessão é recuperado via `MessageRepository.findAllBySessionIdOrderByTimestampAsc()`.
+
+**Formato da resposta `POST /api/messages` (atualizado):**
+```json
+{
+  "userMessage": {
+    "id": "uuid-user",
+    "sessionId": "uuid-da-sessao",
+    "role": "USER",
+    "content": "Olá, tudo bem?",
+    "fileId": null,
+    "timestamp": "2026-06-25T10:30:00Z"
+  },
+  "assistantMessage": {
+    "id": "uuid-assistant",
+    "sessionId": "uuid-da-sessao",
+    "role": "ASSISTANT",
+    "content": "Olá! Sou o assistente virtual. Como posso ajudar?",
+    "fileId": null,
+    "timestamp": "2026-06-25T10:30:01Z"
+  }
+}
+```
+
+> **Nota para evolução futura:** Na Etapa 2, o método `generateMockResponse()` será substituído por uma chamada a um serviço de IA (ex: API do modelo). O contrato de resposta permanece o mesmo — o front-end não precisará ser alterado.
 
 ---
 
