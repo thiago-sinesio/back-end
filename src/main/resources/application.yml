@@ -1,0 +1,134 @@
+# application.yml
+# Configuração principal de infraestrutura para a aplicação Spring Boot.
+# Este arquivo define perfis dev/prod, CORS e multipart upload.
+
+# Perfil padrão de desenvolvimento
+spring:
+  profiles:
+    active: dev
+
+---
+
+spring:
+  profiles: dev
+
+  # Banco de dados H2 em memória para testes locais e desenvolvimento
+  datasource:
+    url: jdbc:h2:mem:chatdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # JPA/Hibernate em modo de desenvolvimento
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+app:
+  cors:
+    # Frontend React localizado em localhost:5173
+    allowed-origins:
+      - http://localhost:5173
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: true
+    max-age: 3600
+
+  upload:
+    # Diretório local padrão para arquivos enviados
+    dir: ./uploads
+    max-file-size: 10485760
+    allowed-types:
+      - application/pdf
+      - text/plain
+    allowed-extensions:
+      - .pdf
+      - .txt
+
+logging:
+  level:
+    root: INFO
+    com.chat: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+
+---
+
+spring:
+  profiles: prod
+
+  # Banco de dados relacional para produção
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:chat_db}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:}
+    initialization-mode: never
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: true
+    max-age: 3600
+
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}
+    max-file-size: 10485760
+    allowed-types:
+      - application/pdf
+      - text/plain
+    allowed-extensions:
+      - .pdf
+      - .txt
+
+logging:
+  level:
+    root: INFO
+    com.chat: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
