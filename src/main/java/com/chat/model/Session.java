@@ -76,6 +76,10 @@ public class Session {
         return updatedAt;
     }
 
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     public Boolean getActive() {
         return active;
     }
