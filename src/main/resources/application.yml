@@ -10,7 +10,9 @@ spring:
 ---
 
 spring:
-  profiles: dev
+  config:
+    activate:
+      on-profile: dev
 
   # Banco de dados H2 em memória para testes locais e desenvolvimento
   datasource:
@@ -77,7 +79,9 @@ logging:
 ---
 
 spring:
-  profiles: prod
+  config:
+    activate:
+      on-profile: prod
 
   # Banco de dados relacional para produção
   datasource:

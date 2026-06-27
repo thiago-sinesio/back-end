@@ -13,7 +13,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.chat.config.interceptor.LoggingInterceptor;
 
-import javax.servlet.MultipartConfigElement;
+import jakarta.servlet.MultipartConfigElement;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,51 +66,30 @@ public class WebConfig implements WebMvcConfigurer {
     // ============================================================================
 
     /**
-     * Configura CORS (Cross-Origin Resource Sharing) para permitir requisições
-     * do frontend React (localhost:5173) e eventuais outros domínios.
+     * Configura CORS (Cross-Origin Resource Sharing) nativo do Spring MVC.
      * 
-     * Configurações:
-     * - allowed-origins: Domínios permitidos (pode incluir wildcards em dev)
-     * - allowed-methods: Métodos HTTP permitidos (GET, POST, PUT, DELETE, OPTIONS)
-     * - allowed-headers: Headers HTTP que o cliente pode enviar (*)
-     * - allow-credentials: Permite cookies e autenticação
-     * - max-age: Tempo de cache da preflight request (em segundos)
-     * 
-     * @return CorsConfigurationSource configurado
+     * @param registry Registro de configurações de CORS
      */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+    @Override
+    public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
+        String[] origins = Arrays.stream(allowedOrigins.split(","))
+                                 .map(String::trim)
+                                 .toArray(String[]::new);
+                                 
+        String[] methods = Arrays.stream(allowedMethods.split(","))
+                                 .map(String::trim)
+                                 .toArray(String[]::new);
+                                 
+        String[] headers = Arrays.stream(allowedHeaders.split(","))
+                                 .map(String::trim)
+                                 .toArray(String[]::new);
 
-        // Parse allowed-origins from properties (comma-separated)
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        origins.replaceAll(String::trim);
-        configuration.setAllowedOrigins(origins);
-
-        // Parse allowed-methods from properties (comma-separated)
-        List<String> methods = Arrays.asList(allowedMethods.split(","));
-        methods.replaceAll(String::trim);
-        configuration.setAllowedMethods(methods);
-
-        // Allowed headers
-        if ("*".equals(allowedHeaders.trim())) {
-            configuration.addAllowedHeader("*");
-        } else {
-            Arrays.stream(allowedHeaders.split(","))
-                    .map(String::trim)
-                    .forEach(configuration::addAllowedHeader);
-        }
-
-        // Credentials (cookies, authorization)
-        configuration.setAllowCredentials(allowCredentials);
-
-        // Cache preflight response
-        configuration.setMaxAge(maxAge);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
+        registry.addMapping("/**")
+                .allowedOrigins(origins)
+                .allowedMethods(methods)
+                .allowedHeaders(headers)
+                .allowCredentials(allowCredentials)
+                .maxAge(maxAge);
     }
 
     // ============================================================================

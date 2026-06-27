@@ -2,6 +2,10 @@ package com.chat.service;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -18,8 +22,11 @@ public class FileParserService {
     }
 
     private String extractTextFromPdf(byte[] content) {
-        // TODO: Implementar extração de texto de PDF com Apache PDFBox
-        // A dependência precisa ser adicionada ao pom.xml
-        return "[Texto extraído do PDF - " + content.length + " bytes]";
+        try (PDDocument document = Loader.loadPDF(content)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            return stripper.getText(document);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Erro ao extrair texto do PDF: " + e.getMessage(), e);
+        }
     }
 }

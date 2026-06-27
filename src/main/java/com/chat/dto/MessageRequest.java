@@ -7,6 +7,6 @@ import java.util.UUID;
 public record MessageRequest(
     @NotNull UUID sessionId,
     @NotBlank String role,
-    @NotBlank String content,
+    String content,
     UUID fileId
 ) {}
