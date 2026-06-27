@@ -1,40 +1,86 @@
-# Back-end — Projeto de IA
+# 🧠 Back-end — Chat Assistant (Projeto de IA)
 
-Este repositório contém a implementação da API REST em Spring Boot responsável por gerenciar sessões de chat, fluxo de mensagens, recepção e processamento de documentos (PDF e TXT), e orquestração do domínio da aplicação.
+O back-end deste projeto é uma robusta **API RESTful** construída com **Java 17** e **Spring Boot 3**. Ele atua como o cérebro da aplicação, orquestrando sessões de conversa, processando o fluxo de mensagens, e gerenciando o upload e a extração inteligente de textos de documentos (PDFs e TXTs) para posterior integração com Modelos de Inteligência Artificial.
 
-## Tecnologias e Arquitetura
-- **Java / Spring Boot**: Framework principal.
-- **Isolamento de Domínio**: Arquitetura focada em desacoplamento. Controllers atuam exclusivamente como fronteiras HTTP, enquanto os Services detêm toda a regra de negócio.
-- **Armazenamento**: Banco de dados relacional via Spring Data JPA (H2 em ambiente de desenvolvimento).
-- **Processamento de Arquivos**: Suporte a envio de anexos via requisições `multipart/form-data`.
+---
 
-## Pré-requisitos
-- Java 17 ou superior.
-- Maven (opcional, caso não utilize o wrapper incluído no projeto).
+## ✨ Principais Funcionalidades
 
-## Como Executar
+- **Gerenciamento de Sessões (`Session`)**: Criação, listagem e controle de conversas independentes.
+- **Mensageria Contextual (`Message`)**: Armazenamento de histórico com separação clara de papéis (`USER` e `ASSISTANT`).
+- **Anexos e Documentos (`FileMetadata`)**: 
+  - Upload via `multipart/form-data`
+  - Limites de tamanho configuráveis (padrão de 10MB)
+  - Extração nativa de texto de PDFs utilizando o **Apache PDFBox**.
+- **Tratamento de Exceções Global**: Padronização de respostas de erro da API com `@ControllerAdvice`.
+- **CORS Configurado Nativamente**: Pronto para se conectar de forma segura ao Front-end sem barreiras de rede.
 
-1. Navegue até o diretório do projeto:
+---
+
+## 🏗 Arquitetura e Tecnologias
+
+Este projeto segue um modelo de **Isolamento de Domínio**, visando alto desacoplamento e manutenibilidade:
+
+* **☕ Java 17** + **Spring Boot 3.4.4**
+* **💾 Spring Data JPA** + **H2 Database** (para rápido desenvolvimento em memória, com perfil de migração fácil para PostgreSQL)
+* **📄 Apache PDFBox** (Processamento avançado de PDFs)
+* **🛠 MapStruct** (Para mapeamento ágil entre Entidades e DTOs)
+
+### 📂 Estrutura de Diretórios
+```
+src/main/java/com/chat/
+├── config/        # Configurações do Spring (CORS, Interceptors, Multipart)
+├── controller/    # Endpoints HTTP (fronteira da API)
+├── dto/           # Objetos de Transferência de Dados (Payloads limpos)
+├── exception/     # Handlers Globais e Exceções customizadas
+├── model/         # Entidades de Domínio (JPA)
+├── repository/    # Interfaces de comunicação com o Banco de Dados
+└── service/       # Regras de Negócio e Lógica da Aplicação
+```
+
+---
+
+## 🚀 Como Executar Localmente
+
+### Pré-requisitos
+- Java 17 (JDK)
+- Apache Maven (Opcional, pois o projeto possui o Maven Wrapper incluído)
+
+### Passo a passo
+
+1. **Clone e acesse o diretório do back-end:**
    ```bash
    cd back-end
    ```
 
-2. (Opcional) Configure as variáveis de ambiente necessárias no `application.yml` ou exporte-as no terminal.
-
-3. Execute a aplicação utilizando o Maven Wrapper:
+2. **Inicie a aplicação utilizando o Maven:**
+   No Windows:
+   ```cmd
+   mvn.cmd spring-boot:run
+   ```
+   No Linux/Mac:
    ```bash
    ./mvnw spring-boot:run
    ```
-   *No Windows, utilize:*
-   ```cmd
-   mvnw.cmd spring-boot:run
-   ```
 
-4. A API estará rodando em `http://localhost:8080`.
-5. Verifique o status da aplicação no endpoint de saúde:
+3. **Verifique se a API está online:**
+   O Tomcat iniciará na porta `8080`. Você pode verificar o status do servidor acessando o endpoint:
    ```bash
    curl http://localhost:8080/api/health
    ```
 
-## Documentação da Especificação
-Para detalhes sobre contratos REST, estrutura de pastas e responsabilidade das camadas, consulte o arquivo [ESPECIFICACAO_BACKEND.md](./ESPECIFICACAO_BACKEND.md).
+4. **Acesse o Banco de Dados (H2 Console):**
+   - **URL:** `http://localhost:8080/h2-console`
+   - **JDBC URL:** `jdbc:h2:mem:chatdb`
+   - **User:** `sa`
+   - **Password:** *(deixe em branco)*
+
+---
+
+## 📚 Documentação Adicional
+
+Todos os detalhes específicos de arquitetura, especificações técnicas detalhadas, diagramas e guia de integração estão disponíveis na pasta `docs/`. Recomendamos fortemente a leitura dos seguintes arquivos:
+
+- 📄 [Especificação do Back-end](./docs/ESPECIFICACAO_BACKEND.md)
+- 📄 [Guia de Integração (API Contracts)](./docs/INTEGRATION_GUIDE.md)
+- 📄 [Documentação do Sistema (Arquitetura Completa)](./docs/SYSTEM_DOCS.md)
