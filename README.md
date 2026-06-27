@@ -37,4 +37,4 @@ Este repositório contém a implementação da API REST em Spring Boot responsá
    ```
 
 ## Documentação da Especificação
-Para detalhes sobre contratos REST, estrutura de pastas e responsabilidade das camadas, consulte o arquivo [ESPECIFICACAO_BACKEND.md](./ESPECIFICACAO_BACKEND.md).
+Para detalhes sobre contratos REST, estrutura de pastas e responsabilidade das camadas, consulte o arquivo [ESPECIFICACAO_BACKEND.md](./docs/ESPECIFICACAO_BACKEND.md).
