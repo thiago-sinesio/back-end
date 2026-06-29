@@ -2,6 +2,7 @@ package com.chat.controller;
 
 import com.chat.dto.UploadResponse;
 import com.chat.service.FileStorageService;
+import com.chat.service.rag.DocumentIngestionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,9 +20,12 @@ import java.util.UUID;
 public class UploadController {
 
     private final FileStorageService fileStorageService;
+    private final DocumentIngestionService documentIngestionService;
 
-    public UploadController(FileStorageService fileStorageService) {
+    public UploadController(FileStorageService fileStorageService,
+                            DocumentIngestionService documentIngestionService) {
         this.fileStorageService = fileStorageService;
+        this.documentIngestionService = documentIngestionService;
     }
 
     @PostMapping("/upload")
@@ -34,6 +38,9 @@ public class UploadController {
         long size = file.getSize();
 
         UploadResponse response = fileStorageService.storeFile(content, originalName, mimeType, size, sessionId);
+
+        documentIngestionService.ingest(content, originalName, mimeType, size);
+
         return ResponseEntity.status(201).body(response);
     }
 

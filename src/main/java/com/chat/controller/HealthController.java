@@ -17,7 +17,7 @@ public class HealthController {
         HealthResponse response = new HealthResponse(
                 "UP",
                 Instant.now(),
-                "1.0.0"
+                "2.0.0"
         );
         return ResponseEntity.ok(response);
     }
