@@ -2,10 +2,12 @@ package com.chat.service;
 
 import com.chat.dto.MessageRequest;
 import com.chat.dto.MessageResponse;
+import com.chat.dto.RagResult;
 import com.chat.model.Message;
 import com.chat.model.Role;
 import com.chat.model.Session;
 import com.chat.repository.MessageRepository;
+import com.chat.service.rag.RagService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,11 +26,14 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final SessionService sessionService;
+    private final RagService ragService;
 
     public MessageService(MessageRepository messageRepository,
-                          SessionService sessionService) {
+                          SessionService sessionService,
+                          RagService ragService) {
         this.messageRepository = messageRepository;
         this.sessionService = sessionService;
+        this.ragService = ragService;
     }
 
     @Transactional
@@ -53,18 +59,30 @@ public class MessageService {
         Message userMessage = new Message(sessionId, role, request.content(), request.fileId());
         userMessage = messageRepository.save(userMessage);
 
-        String mockResponse = generateMockResponse(request.content());
-        Message assistantMessage = new Message(sessionId, Role.ASSISTANT, mockResponse, null);
+        // Chamada ao pipeline RAG — retorna resposta + fontes
+        RagResult ragResult;
+        try {
+            ragResult = ragService.query(request.content(), sessionId);
+        } catch (Exception e) {
+            System.err.println("Erro ao chamar RagService: " + e.getMessage());
+            ragResult = new RagResult(
+                "Desculpe, ocorreu um erro ao consultar o modelo de IA. Detalhes: " + e.getMessage(),
+                Collections.emptyList()
+            );
+        }
+
+        Message assistantMessage = new Message(sessionId, Role.ASSISTANT, ragResult.answer(), null);
         assistantMessage = messageRepository.save(assistantMessage);
 
         sessionService.updateActivity(sessionId);
 
         Map<String, MessageResponse> result = new LinkedHashMap<>();
-        result.put("userMessage", toResponse(userMessage));
-        result.put("assistantMessage", toResponse(assistantMessage));
+        result.put("userMessage", toResponse(userMessage, null));
+        result.put("assistantMessage", toResponse(assistantMessage, ragResult.sources()));
         return result;
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Object> getHistory(UUID sessionId, int page, int size, String sort) {
         Session session = sessionService.findById(sessionId);
 
@@ -81,7 +99,7 @@ public class MessageService {
         Page<Message> messagePage = messageRepository.findBySessionId(sessionId, pageable);
 
         List<MessageResponse> messages = messagePage.getContent().stream()
-                .map(this::toResponse)
+                .map(m -> toResponse(m, null))
                 .toList();
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -94,35 +112,15 @@ public class MessageService {
         return result;
     }
 
-    private MessageResponse toResponse(Message message) {
+    private MessageResponse toResponse(Message message, List<RagResult.Source> sources) {
         return new MessageResponse(
                 message.getId(),
                 message.getSessionId(),
                 message.getRole().name(),
                 message.getContent(),
                 message.getFileId(),
-                message.getTimestamp()
+                message.getTimestamp(),
+                sources
         );
-    }
-
-    String generateMockResponse(String userMessage) {
-        if (userMessage == null || userMessage.isBlank()) {
-            return "Recebi sua mensagem. Em breve serei integrado a um modelo de IA para respostas mais inteligentes!";
-        }
-
-        String lower = userMessage.toLowerCase();
-
-        if (lower.contains("olá") || lower.contains("oi")) {
-            return "Olá! Sou o assistente virtual. Como posso ajudar?";
-        }
-        if (lower.contains("ajuda")) {
-            return "Posso te ajudar com informações gerais. Envie sua pergunta ou anexe um documento PDF/TXT para análise.";
-        }
-        if (lower.contains("arquivo") || lower.contains("documento")) {
-            return "Para enviar um documento, use a área de arrastar-e-soltar ou o botão de upload. Aceito arquivos PDF e TXT de até 10MB.";
-        }
-
-        String snippet = userMessage.length() > 50 ? userMessage.substring(0, 50) + "..." : userMessage;
-        return "Recebi sua mensagem: '" + snippet + "'. Em breve serei integrado a um modelo de IA para respostas mais inteligentes!";
     }
 }

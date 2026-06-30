@@ -1,6 +1,7 @@
 package com.chat.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record MessageResponse(
@@ -9,5 +10,6 @@ public record MessageResponse(
     String role,
     String content,
     UUID fileId,
-    LocalDateTime timestamp
+    LocalDateTime timestamp,
+    List<RagResult.Source> sources
 ) {}

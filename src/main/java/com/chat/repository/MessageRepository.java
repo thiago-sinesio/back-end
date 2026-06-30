@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface MessageRepository extends JpaRepository<Message, UUID> {
 
     Page<Message> findBySessionId(UUID sessionId, Pageable pageable);
+    void deleteBySessionId(UUID sessionId);
 }

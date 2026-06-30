@@ -34,4 +34,10 @@ public class SessionController {
         List<Session> sessions = sessionService.listAll();
         return ResponseEntity.ok(sessions);
     }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/sessions/{id}")
+    public ResponseEntity<Void> deleteSession(@org.springframework.web.bind.annotation.PathVariable java.util.UUID id) {
+        sessionService.deleteSession(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -1,69 +1,65 @@
 package com.chat.service.rag;
 
+import com.chat.client.N8nClient;
+import com.chat.model.DocumentChunk;
+import com.chat.repository.DocumentChunkRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class DocumentIngestionService {
 
-    private final ParsingService parsingService;
     private final ChunkingService chunkingService;
     private final EmbeddingService embeddingService;
-    private final WebhookService webhookService;
-
-    private final Map<String, IngestionResult> results = new ConcurrentHashMap<>();
+    private final N8nClient n8nClient;
+    private final DocumentChunkRepository documentChunkRepository;
 
     public DocumentIngestionService(
-            ParsingService parsingService,
             ChunkingService chunkingService,
             EmbeddingService embeddingService,
-            WebhookService webhookService) {
-        this.parsingService = parsingService;
+            N8nClient n8nClient,
+            DocumentChunkRepository documentChunkRepository) {
         this.chunkingService = chunkingService;
         this.embeddingService = embeddingService;
-        this.webhookService = webhookService;
+        this.n8nClient = n8nClient;
+        this.documentChunkRepository = documentChunkRepository;
     }
 
     @Transactional
-    public IngestionResult ingest(byte[] content, String originalName, String mimeType, long size) {
-        String fileId = UUID.randomUUID().toString();
-
-        String extractedText = parsingService.parse(content, mimeType);
+    public void ingest(UUID fileId, String extractedText, String originalName, UUID sessionId) {
+        if (extractedText == null || extractedText.isBlank()) {
+            return;
+        }
 
         List<String> chunks = chunkingService.chunk(extractedText);
+        List<DocumentChunk> documentChunks = new ArrayList<>();
 
-        for (String chunk : chunks) {
+        for (int i = 0; i < chunks.size(); i++) {
+            String chunk = chunks.get(i);
             float[] embedding = embeddingService.generateEmbedding(chunk);
+            
+            documentChunks.add(new DocumentChunk(
+                    fileId,
+                    sessionId,
+                    chunk,
+                    i,
+                    embedding,
+                    chunk.length()
+            ));
+        }
+        
+        if (!documentChunks.isEmpty()) {
+            documentChunkRepository.saveAll(documentChunks);
         }
 
         try {
-            webhookService.notify(fileId, originalName, chunks.size());
+            n8nClient.triggerIngestionWorkflow(fileId.toString(), originalName, chunks.size());
         } catch (Exception e) {
-            webhookService.notifyError(fileId, originalName, e.getMessage());
+            System.err.println("Webhook N8n failed: " + e.getMessage());
         }
-
-        IngestionResult result = new IngestionResult(fileId, originalName, extractedText.length(), chunks.size());
-        results.put(fileId, result);
-        return result;
     }
-
-    public IngestionResult getStatus(String fileId) {
-        IngestionResult result = results.get(fileId);
-        if (result == null) {
-            throw new IllegalArgumentException("Documento não encontrado: " + fileId);
-        }
-        return result;
-    }
-
-    public record IngestionResult(
-            String fileId,
-            String originalName,
-            int totalCharacters,
-            int totalChunks
-    ) {}
 }

@@ -5,7 +5,6 @@ import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.unit.DataSize;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -143,29 +142,5 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoggingInterceptor())
                 .addPathPatterns("/**")
                 .excludePathPatterns("/health", "/actuator/**", "/swagger-ui/**", "/v3/api-docs/**");
-    }
-
-    // ============================================================================
-    // RestTemplate Bean (para chamadas síncronas a APIs externas)
-    // ============================================================================
-
-    /**
-     * Bean RestTemplate para comunicação síncrona com APIs externas.
-     * 
-     * Pode ser injetado em serviços que precisem chamar APIs:
-     * - Modelos de IA (OpenAI, Hugging Face, etc.)
-     * - Serviços terceirizados
-     * - Microserviços internos
-     * 
-     * Futuro:
-     * - Adicionar timeout
-     * - Adicionar retry logic
-     * - Adicionar circuit breaker
-     * 
-     * @return RestTemplate configurado
-     */
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
     }
 }

@@ -30,7 +30,7 @@ public class DocumentChunk {
     @Column(nullable = false)
     private Integer chunkIndex;
 
-    @Column(columnDefinition = "VECTOR(1536)")
+    @Column(columnDefinition = "VECTOR(768)")
     private float[] embedding;
 
     @Column(nullable = true)

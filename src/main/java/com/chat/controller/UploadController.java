@@ -39,7 +39,7 @@ public class UploadController {
 
         UploadResponse response = fileStorageService.storeFile(content, originalName, mimeType, size, sessionId);
 
-        documentIngestionService.ingest(content, originalName, mimeType, size);
+        documentIngestionService.ingest(response.fileId(), response.extractedText(), originalName, sessionId);
 
         return ResponseEntity.status(201).body(response);
     }

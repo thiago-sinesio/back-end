@@ -22,8 +22,8 @@ public class RagController {
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
-        String answer = ragService.query(request.question());
-        ChatResponse response = new ChatResponse(request.question(), answer);
+        com.chat.dto.RagResult ragResult = ragService.query(request.question(), java.util.UUID.randomUUID());
+        ChatResponse response = new ChatResponse(request.question(), ragResult.answer());
         return ResponseEntity.ok(response);
     }
 }
