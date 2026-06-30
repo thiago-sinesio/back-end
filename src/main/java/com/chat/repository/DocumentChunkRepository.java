@@ -28,4 +28,6 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, UU
     void deleteByFileId(UUID fileId);
 
     List<DocumentChunk> findBySessionIdOrderByChunkIndexAsc(UUID sessionId);
+    
+    void deleteBySessionId(UUID sessionId);
 }
