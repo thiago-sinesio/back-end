@@ -68,7 +68,7 @@ app:
     url: ${AI_URL:http://localhost:11434/v1}
     api-key: ${AI_API_KEY:ollama}
     model:
-      chat: ${AI_CHAT_MODEL:llama3.2}
+      chat: ${AI_CHAT_MODEL:llama3}
       embedding: ${AI_EMBEDDING_MODEL:nomic-embed-text}
 
   n8n:

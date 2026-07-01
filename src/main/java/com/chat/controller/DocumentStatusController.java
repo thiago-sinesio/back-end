@@ -34,7 +34,7 @@ public class DocumentStatusController {
     public ResponseEntity<Map<String, Object>> getDocumentStatus(@PathVariable UUID id) {
         return fileMetadataRepository.findById(id)
                 .map(metadata -> {
-                    long chunkCount = documentChunkRepository.findBySessionIdOrderByChunkIndexAsc(id).size();
+                    long chunkCount = documentChunkRepository.findByFileIdOrderByChunkIndexAsc(id).size();
 
                     Map<String, Object> response = new LinkedHashMap<>();
                     response.put("fileId", metadata.getId());
