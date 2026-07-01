@@ -66,6 +66,12 @@
             <version>3.0.3</version>
         </dependency>
 
+        <dependency>
+                <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-vector</artifactId>
+             <version>6.6.11.Final</version>
+        </dependency>
+
 
     </dependencies>
 

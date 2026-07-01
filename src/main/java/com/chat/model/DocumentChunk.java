@@ -10,6 +10,11 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "document_chunks")
 public class DocumentChunk {
@@ -30,6 +35,8 @@ public class DocumentChunk {
     @Column(nullable = false)
     private Integer chunkIndex;
 
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length = 768)
     @Column(columnDefinition = "VECTOR(768)")
     private float[] embedding;
 

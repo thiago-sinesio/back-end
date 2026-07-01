@@ -34,12 +34,18 @@ public class ChunkingService {
                 }
             }
             chunks.add(text.substring(start, end).trim());
-            start = end - chunkOverlap;
-            if (start >= text.length()) {
+
+            // Se esse chunk já cobriu o texto até o fim, encerra aqui.
+            // Evita calcular um "start" negativo quando o texto é curto
+            // (menor que chunkSize/chunkOverlap).
+            if (end >= text.length()) {
                 break;
             }
-            if (start + chunkOverlap > text.length() && !chunks.isEmpty()) {
-                break;
+
+            start = end - chunkOverlap;
+            // Segurança extra: nunca deixa start regredir ou ficar negativo/zero
+            if (start <= 0) {
+                start = end;
             }
         }
         return chunks;
